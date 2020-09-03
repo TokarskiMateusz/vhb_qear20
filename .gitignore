@@ -42,3 +42,4 @@ vignettes/*.pdf
 .DS_Store
 host_access_keys.csv
 *.Rproj
+.Rproj.user
