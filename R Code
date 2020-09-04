@@ -1,0 +1,91 @@
+getwd()
+# It leads to the following working direction:
+# [1] "/Users/mateusztokarski/VHB QEAR2020"
+
+# Import Insolvency Data 2020
+# Display Data in RStudio
+library(readr)
+insolvency_filings_de_julaug2020_incomplete <- read_csv("raw_data/insolvency_filings_de_julaug2020_incomplete.csv")
+View(insolvency_filings_de_julaug2020_incomplete)
+
+# We check, if our data contain any missing values.
+is.na(insolvency_filings_de_julaug2020_incomplete)
+sum(is.na(insolvency_filings_de_julaug2020_incomplete$date))
+sum(is.na(insolvency_filings_de_julaug2020_incomplete$insolvency_court))
+sum(is.na(insolvency_filings_de_julaug2020_incomplete$court_file_number))
+sum(is.na(insolvency_filings_de_julaug2020_incomplete$subject))
+sum(is.na(insolvency_filings_de_julaug2020_incomplete$name_debtor))
+sum(is.na(insolvency_filings_de_julaug2020_incomplete$domicile_debtor))
+# The analysis shows missing values. We have 10 033 observations of 6 variables.
+# To run all analyses we are using the whole data set ignoring the two missing values!
+
+# In the following we install necessary packages
+install.packages("tidyverse")
+library(tidyverse)
+install.packages("dplyr")
+install.packages("expss")
+library(expss)
+# For package compliation type "Yes"
+
+# Now we split Data in Name of Debtor (name_debtor) and its domicile (domicile_debtor)
+# Data is displayed afterwards
+insolv <- file.path("./raw_data", "insolvency_filings_de_julaug2020_incomplete.csv")
+dat1 <- read.csv(file = insolv, header = TRUE, fileEncoding = "UTF-8")
+print(dat1)
+
+# We control for the type of data of "dat1", if "dat1" has a data frame, 
+# display the data frame characteristics as well as its variable type
+
+typeof(dat1)
+is.data.frame(dat1)
+View(dat1)
+names(dat1) #variable names
+ncol(dat1) #number of columns
+nrow(dat1) #number of rows
+lapply(dat1, class)
+
+# Now, we change the variable type for further analyses
+dat1$date <- as.Date(dat1$date)
+# In the following step we remove rows which are duplicates of other rows
+dat1 <- dat1 %>% distinct()
+# Here we safe and clean our file
+write.csv(dat1, file.path("./data", "dat1_clean.csv"), row.names = TRUE)
+
+# Now, we label the variables
+# We start with the character variables
+dat1 = apply_labels(dat1,
+                    insolvency_court = "Insolvency Court",
+                    court_file_number = "File Number in Court",
+                    subject = "Subject",
+                    name_debtor = "Name of Debtor",
+                    domicile_debtor = "Debtor Domicile"
+)
+
+# And continue with the date variables
+dat1 = apply_labels(dat1,
+                    date = "Date of Insolvency Filing"
+)
+
+# In the following we display different categories and their properties
+Subject <- table(dat1$subject)
+Subject
+# This table presents the information, among other things, about the amount of insolvencies (897), rejected proceedings (501), 
+# monitored insolvencies (10).
+
+# Now, we disply the amount of filings per year and the decisions that have been made
+cro(dat1$date, dat1$subject)
+# This tables present insolvency filings for each day of July and August and by all different prperties,  
+# such as rejected proceedings etc.
+
+# After running the code we found another way to display the properties of the data using the following code.
+# It is a less convenient way to display the properties.
+str(insolvency_filings_de_julaug2020_incomplete)
+
+
+
+
+
+
+
+
+ 
