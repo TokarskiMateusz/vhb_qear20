@@ -1,0 +1,64 @@
+### This is the script for importing, labeling and briefly summarizing insolvencies filings in Germany from July 1st to August 18th.
+#The .csv is publicly available at the Github reporsitory of Joachim Gassen or at the original source https://www.insolvenzbekanntmachungen.de
+
+#Packages required to run the code. 
+#Only run this once, the packages will remain installed on your local R. Mainly base R and data.table functions are used.
+#install.packages("data.table")
+library(data.table)
+#install.packages("expss")
+library(expss)
+
+## Import Insolvency Data 2020
+insolvencies <- read.csv2("raw_data/insolvency_filings_de_julaug2020_incomplete.csv", sep = ",", encoding = "UTF-8") #Encoding UTF-8 to treat Umlaute.
+#View(insolvencies) # Display Data in RStudio
+
+
+
+## Simple data datea cleanse
+#Transform dataset from data.frame to data.table
+insolvencies <- as.data.table(insolvencies)
+
+# Count number of rows that contain NA values in any column.
+nrow(insolvencies) - nrow(insolvencies[complete.cases(insolvencies), ]) # count all rows - rows without NA values
+# The analysis shows no missing values. We have 10 035 observations of 6 variables.
+
+# Treat strucutre of insolvencies
+str(insolvencies) # structure of insolencies
+insolvencies$date <- as.Date(insolvencies$date)
+str(insolvencies)
+
+# Remove dublicates
+nrow (insolvencies) - nrow(unique(insolvencies)) #display number of duplicate rows
+insolvencies <- unique(insolvencies)
+
+# Apply labels for nicer column names
+insolvencies = apply_labels(insolvencies,
+                    date = "Date of Insolvency Filing",
+                    insolvency_court = "Court Location",
+                    court_file_number = "File Number in Court",
+                    subject = "Subject",
+                    name_debtor = "Name of Debtor",
+                    domicile_debtor = "Debtor Domicile"
+)
+
+
+
+## Create summary tables of different data characteristics
+# Number of Subjects
+Subject <- insolvencies[, .N, by = "subject"]
+Subject <- Subject[order(Subject$N, decreasing = T),] 
+
+# Domicile of Court
+CourtLocation <- insolvencies[, .N, by = "insolvency_court"]
+CourtLocation <- CourtLocation[order(CourtLocation$N, decreasing = T),] 
+
+
+## Time distribution
+Date <- insolvencies[, .N, by = "date"]
+Date <- Date[order(Date$N, decreasing = T),] 
+plot(Date$date, Date$N, type = "l", xlab = "Date", ylab = "Observations") # display time distribution
+
+
+### Conclusion:
+On the first of July, insolvensies where the highest. One could filter for weekdays(), as it seems that the offices sometimes 
+work on saturdays which leads to a drop in observations.
